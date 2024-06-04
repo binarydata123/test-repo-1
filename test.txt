@@ -1,3 +1,4 @@
 This is first repo to sync and test conflicts code.
+hello new.
 checking conflict.
 Adding conflict from repo 1111.
