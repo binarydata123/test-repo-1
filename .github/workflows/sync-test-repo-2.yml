@@ -31,30 +31,36 @@ jobs:
           git remote prune test-repo-2
           git fetch test-repo-2
 
-      - name: Create branch with current date and time
+      - name: Merge changes to development branch and handle conflicts
         run: |
-          datetime=$(date '+%Y%m%d%H%M%S')
-          git checkout -b "test-repo-1-changes-${datetime}"
-
-      - name: Merge changes to development branch and push to test-repo-2
-        run: |
+          git checkout -b test-repo-2-development test-repo-2/development || git checkout test-repo-2-development
           git merge --allow-unrelated-histories main || true
           if [ -f .git/MERGE_HEAD ]; then
-            # Resolve merge conflicts manually
-            echo "Resolve merge conflicts manually and commit the changes."
+            datetime=$(date '+%Y%m%d%H%M%S')
+            new_branch="test-repo-1-changes-${datetime}"
+            git checkout -b $new_branch
+            git add .
+            git commit -m "Merge conflict: resolve conflicts manually"
+            git push https://x-access-token:${{ secrets.PAT_TEST_REPO_2 }}@github.com/binarydata123/test-repo-2.git HEAD:$new_branch
+            echo "Merge conflicts detected. Pushed to new branch $new_branch."
             exit 1
+          else
+            git push https://x-access-token:${{ secrets.PAT_TEST_REPO_2 }}@github.com/binarydata123/test-repo-2.git test-repo-2-development:development
           fi
-          git push https://github.com/binarydata123/test-repo-2.git HEAD:test-repo-2-development
-        if: ${{ success() }}
 
-      - name: Merge changes to main branch and push to test-repo-2
+      - name: Merge changes to main branch and handle conflicts
         run: |
-          git checkout main || true
+          git checkout -b test-repo-2-main test-repo-2/main || git checkout test-repo-2-main
           git merge --allow-unrelated-histories main || true
           if [ -f .git/MERGE_HEAD ]; then
-            # Resolve merge conflicts manually
-            echo "Resolve merge conflicts manually and commit the changes."
+            datetime=$(date '+%Y%m%d%H%M%S')
+            new_branch="test-repo-1-changes-main-${datetime}"
+            git checkout -b $new_branch
+            git add .
+            git commit -m "Merge conflict: resolve conflicts manually"
+            git push https://x-access-token:${{ secrets.PAT_TEST_REPO_2 }}@github.com/binarydata123/test-repo-2.git HEAD:$new_branch
+            echo "Merge conflicts detected. Pushed to new branch $new_branch."
             exit 1
+          else
+            git push https://x-access-token:${{ secrets.PAT_TEST_REPO_2 }}@github.com/binarydata123/test-repo-2.git test-repo-2-main:main
           fi
-          git push https://github.com/binarydata123/test-repo-2.git HEAD:test-repo-2-main
-        if: ${{ success() }}
